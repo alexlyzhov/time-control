@@ -45,7 +45,7 @@ for daysi, dayi in enumerate(days[0]):
     axes.yaxis.set(ticks = np.arange(0.5, 11), ticklabels = np.arange(0, 11))
     fig.suptitle(date)
 
-    for act in xrange(11):
+    for act in range(11):
         rowi = dayi + act
         row = data.iloc[[rowi]]
         coli = 2
@@ -72,3 +72,58 @@ for daysi, dayi in enumerate(days[0]):
             coli += 2
 
     plt.savefig(str(date) + '.png', bbox_inches='tight')
+
+# the new cumulative graphs
+for daysi, dayi in enumerate(days[0]):
+# for dayi in [days[0][16]]: # debug
+    dtime = data.iloc[[dayi - 1]][0].values[0]
+#     if type(dtime) == str:
+#         dtime = datetime(int(dtime[6:10]), int(dtime[11]), int(dtime[13]))
+#     date = dtime.date()
+    date = init_date + pd.Timedelta(days = daysi)
+
+    fig, axes = plt.subplots(1, 1)
+    fig.set_size_inches((12, 5))
+#     axes.get_yaxis().set_visible(False)
+    plt.xlim(0, 11)
+    plt.ylim(0, 15)
+#     plt.xlabel('hour')
+#     plt.ylabel('activity')
+    plt.yticks(np.arange(0, 16))
+#     plt.yticks(np.arange(0, 12))
+    axes.tick_params(labeltop = False, labelright = True)
+    axes.xaxis.set(ticks = np.arange(0.5, 11), ticklabels = np.arange(0, 11))
+    fig.suptitle(date)
+
+    for act in range(11):
+        rowi = dayi + act
+        row = data.iloc[[rowi]]
+        coli = 2
+        duration_total = 0
+        while row[coli].values[0] is not None:
+            if type(row[coli].values[0]) == pd.datetime:
+                start = row[coli].values[0].time()
+            else:
+                start = row[coli].values[0]
+            if type(row[coli + 1].values[0]) == pd.datetime:
+                end = row[coli + 1].values[0].time()
+            else:
+                end = row[coli + 1].values[0]
+            intensity = act + 1
+    #         print(start, end, intensity)
+
+            start_hour = start.hour + float(start.minute) / 24
+            end_hour = end.hour + float(end.minute) / 24
+            duration_cur = end_hour - start_hour
+            duration_total += duration_cur
+            
+            coli += 2
+            
+        color = list(colormap(float(act) / 11))
+#             color[3] = 0.6
+        plt.broken_barh([(act, 1)], (0, duration_total),
+                               cmap = colormap,
+#                                        facecolor = color)
+                               facecolor = color, edgecolor = 'white')
+
+    plt.savefig(str(date) + '_sums.png', bbox_inches='tight')
